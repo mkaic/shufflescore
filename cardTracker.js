@@ -294,28 +294,6 @@ function computeRisingSequences(beforeOrder, afterOrder) {
     return runs;
 }
 
-// 5) Footrule distance (L1 rank displacement)
-// Measures how far each card moved from its original position
-// Sum of absolute position changes, normalized
-// Returns: fraction in [0,1]
-function computeFootrule(beforeOrder, afterOrder) {
-    if (beforeOrder.length === 0) return 0;
-
-    const n = beforeOrder.length;
-    const positionMap = createPositionMapping(beforeOrder, afterOrder);
-
-    // Sum up how far each card moved
-    // e.g., card at position 2 moving to position 7 adds 5 to the sum
-    let totalDisplacement = 0;
-    for (let i = 0; i < n; i++) {
-        const card = beforeOrder[i];
-        totalDisplacement += Math.abs(positionMap[card] - i);
-    }
-
-    // Normalize by maximum possible displacement (when deck is reversed)
-    const maxFootrule = Math.floor(n * n / 2);
-    return maxFootrule > 0 ? totalDisplacement / maxFootrule : 0;
-}
 
 // Compute all shuffle quality metrics
 // Only considers cards that appear in BOTH permutations
@@ -345,7 +323,6 @@ function computeShuffleMetrics(beforeOrder, afterOrder) {
     const adjacency = computeAdjacencyPreservation(filteredBefore, filteredAfter);
     const lis = computeLIS(filteredBefore, filteredAfter);
     const runs = computeRisingSequences(filteredBefore, filteredAfter);
-    const footrule = computeFootrule(filteredBefore, filteredAfter);
 
     // Expected values for three key scenarios:
     // - Random: uniform random shuffle (what we want!)
@@ -367,10 +344,6 @@ function computeShuffleMetrics(beforeOrder, afterOrder) {
     const expectedRunsRandom = (n + 1) / 2;  // Random has ≈ n/2 runs
     const expectedRunsNoOp = 1;              // No-op has 1 run
     const expectedRunsMax = n;               // Alternating has n runs
-
-    const expectedFootruleRandom = 1/3;  // Random displacement ≈ 1/3
-    const expectedFootruleNoOp = 0.0;    // No-op has 0 displacement
-    const expectedFootruleMax = 1.0;     // Reversed has max displacement
 
     // Normalize scores: score of 1.0 = close to random (good!)
     //                   score of 0.0 = close to no-op OR max-scramble (both bad!)
@@ -404,13 +377,6 @@ function computeShuffleMetrics(beforeOrder, afterOrder) {
     );
     const normalizedRuns = 1 - Math.abs(runs - expectedRunsRandom) / runsDeviation;
 
-    // Footrule normalization
-    const footruleDeviation = Math.max(
-        Math.abs(expectedFootruleRandom - expectedFootruleNoOp),
-        Math.abs(expectedFootruleRandom - expectedFootruleMax)
-    );
-    const normalizedFootrule = 1 - Math.abs(footrule - expectedFootruleRandom) / footruleDeviation;
-
     // Calculate overall shuffle randomness score
     // Simple average of all 5 normalized metrics
     // 1.0 = perfect shuffle, 0.0 = no shuffle or too scrambled
@@ -418,16 +384,14 @@ function computeShuffleMetrics(beforeOrder, afterOrder) {
         normalizedKendall +
         normalizedAdjacency +
         normalizedLIS +
-        normalizedRuns +
-        normalizedFootrule
-    ) / 5;
+        normalizedRuns
+    ) / 4;
 
     return {
         kendallTau: kendallTau,
         adjacencyPreservation: adjacency,
         lisLength: lis,
         risingSequences: runs,
-        footrule: footrule,
         deckSize: n,
         expected: {
             kendallTau: expectedKendallRandom,
@@ -440,7 +404,6 @@ function computeShuffleMetrics(beforeOrder, afterOrder) {
             adjacencyPreservation: normalizedAdjacency,
             lisLength: normalizedLIS,
             risingSequences: normalizedRuns,
-            footrule: normalizedFootrule
         },
         overallScore: overallScore
     };

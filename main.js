@@ -198,7 +198,6 @@ $(function () {
             "Adjacency: " + m.adjacencyPreservation.toFixed(3) + " (exp: " + m.expected.adjacencyPreservation.toFixed(3) + ") [norm: " + m.normalized.adjacencyPreservation.toFixed(2) + "]",
             "LIS: " + m.lisLength + " (exp: " + m.expected.lisLength.toFixed(1) + ") [norm: " + m.normalized.lisLength.toFixed(2) + "]",
             "Runs: " + m.risingSequences + " (exp: " + m.expected.risingSequences.toFixed(1) + ") [norm: " + m.normalized.risingSequences.toFixed(2) + "]",
-            "Footrule: " + m.footrule.toFixed(3) + " [norm: " + m.normalized.footrule.toFixed(2) + "]"
         ];
 
         $("#shuffle-metrics").html(lines.join("<br>")).addClass("visible");
